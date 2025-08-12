@@ -10,5 +10,6 @@ public class CommandsRegister {
     @SubscribeEvent
     public static void registerCommands(RegisterCommandsEvent event) {
         HomeCommand.register(event.getDispatcher());
+        TpaCommand.register(event.getDispatcher());
     }
 }
