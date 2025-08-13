@@ -12,11 +12,11 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.*;
 import net.minecraft.server.level.ServerPlayer;
 
-public class HomeCommand {
+public class HomeCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
                 Commands.literal("home")
-                        .executes(HomeCommand::goToHome)
+                        .executes(HomeCommands::goToHome)
 
                         .then(Commands.argument("homeName", StringArgumentType.word())
                                 .executes(ctx -> goToNamedHome(ctx, StringArgumentType.getString(ctx, "homeName"))))
@@ -24,12 +24,12 @@ public class HomeCommand {
 
         dispatcher.register(
                 Commands.literal("homes")
-                        .executes(HomeCommand::listAllHomes)
+                        .executes(HomeCommands::listAllHomes)
         );
 
         dispatcher.register(
                 Commands.literal("sethome")
-                        .executes(HomeCommand::setHome)
+                        .executes(HomeCommands::setHome)
 
                         .then(Commands.argument("homeName", StringArgumentType.word())
                                 .executes(ctx -> setNamedHome(ctx, StringArgumentType.getString(ctx, "homeName"))))
@@ -97,8 +97,9 @@ public class HomeCommand {
         int y = pos.getInt("y");
         int z = pos.getInt("z");
 
+        BackCommand.setLastTeleport(player);
+
         player.teleportTo(x + 0.5, y, z + 0.5);
-//        player.sendSystemMessage(Component.literal("Teleported to " + homeName + "!"));
 
         return Command.SINGLE_SUCCESS;
     }

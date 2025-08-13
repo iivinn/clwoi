@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class TpaCommand {
+public class TpaCommands {
     public static class TpaRequest {
         public UUID sender;
         public UUID target;
@@ -63,11 +63,11 @@ public class TpaCommand {
         );
 
         dispatcher.register(
-                Commands.literal("tpaccept").executes(TpaCommand::acceptTpa)
+                Commands.literal("tpaccept").executes(TpaCommands::acceptTpa)
         );
 
         dispatcher.register(
-                Commands.literal("tpdecline").executes(TpaCommand::declineTpa)
+                Commands.literal("tpdecline").executes(TpaCommands::declineTpa)
         );
     }
 
@@ -79,14 +79,14 @@ public class TpaCommand {
             return 0;
         }
 
-        TpaCommand.sendRequest(sender.getUUID(), target.getUUID(), false);
+        TpaCommands.sendRequest(sender.getUUID(), target.getUUID(), false);
 
         sender.sendSystemMessage(Component.literal("Sent TPA request to " + target.getName().getString()));
 
         MutableComponent msg = Component.literal(sender.getName().getString())
                 .append(Component.literal(" has requested to teleport to you. "))
                 .append(
-                        Component.literal("[Accept] ")
+                        Component.literal("[Accept]")
                                 .setStyle(Style.EMPTY
                                         .withColor(ChatFormatting.GREEN)
                                         .withUnderlined(true)
@@ -94,6 +94,7 @@ public class TpaCommand {
                                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to accept!")))
                                 )
                 )
+                .append(Component.literal(" "))
                 .append(
                         Component.literal("[Decline]")
                                 .setStyle(Style.EMPTY
@@ -116,7 +117,7 @@ public class TpaCommand {
             return 0;
         }
 
-        TpaCommand.sendRequest(sender.getUUID(), target.getUUID(), true);
+        TpaCommands.sendRequest(sender.getUUID(), target.getUUID(), true);
 
         sender.sendSystemMessage(Component.literal("Sent TPAHere request to " + target.getName().getString()));
 
@@ -147,37 +148,39 @@ public class TpaCommand {
 
     private static int acceptTpa(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer target = ctx.getSource().getPlayerOrException();
-        TpaCommand.TpaRequest req = TpaCommand.getRequest(target.getUUID());
+        TpaCommands.TpaRequest req = TpaCommands.getRequest(target.getUUID());
 
-        if (req == null || TpaCommand.isExpired(req)) {
+        if (req == null || TpaCommands.isExpired(req)) {
             target.sendSystemMessage(Component.literal("No valid TPA request found."));
-            TpaCommand.removeRequest(target.getUUID());
+            TpaCommands.removeRequest(target.getUUID());
             return 0;
         }
 
         ServerPlayer sender = Objects.requireNonNull(target.getServer()).getPlayerList().getPlayer(req.sender);
         if (sender == null) {
             target.sendSystemMessage(Component.literal("The player who sent the request is no longer online."));
-            TpaCommand.removeRequest(target.getUUID());
+            TpaCommands.removeRequest(target.getUUID());
             return 0;
         }
 
         if (req.here) {
+            BackCommand.setLastTeleport(target);
             target.teleportTo(sender.serverLevel(), sender.getX(), sender.getY(), sender.getZ(), sender.getYRot(), sender.getXRot());
         } else {
+            BackCommand.setLastTeleport(sender);
             sender.teleportTo(target.serverLevel(), target.getX(), target.getY(), target.getZ(), target.getYRot(), target.getXRot());
         }
 
         sender.sendSystemMessage(Component.literal("Teleport request accepted."));
         target.sendSystemMessage(Component.literal("Teleport request accepted."));
 
-        TpaCommand.removeRequest(target.getUUID());
+        TpaCommands.removeRequest(target.getUUID());
         return Command.SINGLE_SUCCESS;
     }
 
     private static int declineTpa(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         ServerPlayer target = ctx.getSource().getPlayerOrException();
-        TpaCommand.TpaRequest req = TpaCommand.getRequest(target.getUUID());
+        TpaCommands.TpaRequest req = TpaCommands.getRequest(target.getUUID());
 
         if (req == null) {
             target.sendSystemMessage(Component.literal("No TPA request to decline."));
@@ -190,7 +193,7 @@ public class TpaCommand {
         }
 
         target.sendSystemMessage(Component.literal("You declined the TPA request."));
-        TpaCommand.removeRequest(target.getUUID());
+        TpaCommands.removeRequest(target.getUUID());
         return Command.SINGLE_SUCCESS;
     }
 }
